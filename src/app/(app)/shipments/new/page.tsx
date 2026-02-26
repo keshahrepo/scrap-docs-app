@@ -191,6 +191,12 @@ export default function NewShipmentPage() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
+      // Re-fetch invoice number to avoid duplicates
+      const { data: freshInv } = await supabase.rpc("next_invoice_number", {
+        prefix: "ARC",
+      });
+      const finalInvoiceNumber = freshInv || invoiceNumber;
+
       // Insert shipment
       const { data: shipment, error: shipmentError } = await supabase
         .from("shipments")
@@ -199,7 +205,7 @@ export default function NewShipmentPage() {
           seller_id: sellerId,
           buyer_id: buyerId,
           commodity_id: commodityId,
-          invoice_number: invoiceNumber,
+          invoice_number: finalInvoiceNumber,
           invoice_date: invoiceDate,
           bl_number: blNumber || null,
           vessel_name: vesselName || null,
