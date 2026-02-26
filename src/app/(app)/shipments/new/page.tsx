@@ -191,11 +191,23 @@ export default function NewShipmentPage() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // Re-fetch invoice number to avoid duplicates
-      const { data: freshInv } = await supabase.rpc("next_invoice_number", {
-        prefix: "ARC",
-      });
-      const finalInvoiceNumber = freshInv || invoiceNumber;
+      // Get next available invoice number
+      const { data: existing } = await supabase
+        .from("shipments")
+        .select("invoice_number")
+        .like("invoice_number", "ARC%");
+
+      let maxNum = 3620;
+      if (existing) {
+        for (const row of existing) {
+          const match = row.invoice_number.match(/^ARC(\d+)/);
+          if (match) {
+            const num = parseInt(match[1], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      }
+      const finalInvoiceNumber = `ARC${maxNum + 1}`;
 
       // Insert shipment
       const { data: shipment, error: shipmentError } = await supabase
