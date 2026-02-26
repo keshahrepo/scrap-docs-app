@@ -252,7 +252,9 @@ export default function NewShipmentPage() {
       toast.success("Shipment created successfully");
       router.push(`/shipments/${shipment.id}`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create shipment");
+      const msg = err instanceof Error ? err.message : JSON.stringify(err);
+      console.error("Create shipment error:", err);
+      toast.error(msg || "Failed to create shipment");
     }
     setLoading(false);
   }
