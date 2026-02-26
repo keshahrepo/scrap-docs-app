@@ -6,7 +6,13 @@ import { DOCUMENTS } from "@/types/document";
 import type { ShipmentWithRelations } from "@/types/shipment";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  const key = process.env.RESEND_API_KEY;
+  if (!key || key === "your_resend_api_key_here") {
+    throw new Error("RESEND_API_KEY is not configured");
+  }
+  return new Resend(key);
+}
 
 export async function POST(
   request: NextRequest,
@@ -66,7 +72,7 @@ export async function POST(
       message ||
       `Please find attached the shipping documents for Invoice ${shipment.invoice_number}.\n\nBest regards,\n${templateData.seller_name}`;
 
-    await resend.emails.send({
+    await getResend().emails.send({
       from: `ScrapDocs <onboarding@resend.dev>`,
       to,
       subject: emailSubject,
